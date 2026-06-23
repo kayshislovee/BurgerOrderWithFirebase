@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db, auth } from "../firebase";
-import AuthModal from "../components/AuthModal";
+import AuthModal from "../components/LoginRegister";
 import { useAuth } from "../context/AuthContext";
 import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, getDoc, doc } from "firebase/firestore";
 import { signOut } from "firebase/auth";

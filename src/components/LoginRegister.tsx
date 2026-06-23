@@ -45,6 +45,7 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
     try {
       if (mode === "login") {
         await signInWithEmailAndPassword(auth, form.email, form.password);
+        alert("Berhasil login!");
       } else {
         const { user } = await createUserWithEmailAndPassword(auth, form.email, form.password);
         await setDoc(doc(db, "users", user.uid), {
