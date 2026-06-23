@@ -16,10 +16,8 @@ export default function App() {
           <Route path="/dashboard" element={
             <ProtectedRoute><Dashboard /></ProtectedRoute>
           } />
-          <Route path="/pesanburger" element={
-            <ProtectedRoute><BurgerOrder /></ProtectedRoute>
-          } />
-          <Route path="*" element={<Navigate to="/login" />} />
+          <Route path="/pesanburger" element={<BurgerOrder />} />
+          <Route path="*" element={<Navigate to="/pesanburger" />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
