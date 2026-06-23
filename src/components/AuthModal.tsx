@@ -113,12 +113,7 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
           </button>
         </form>
 
-        <button onClick={onClose} style={{
-          marginTop: 16, width: "100%", padding: 8, background: "none",
-          border: "1px solid #ccc", borderRadius: 6, cursor: "pointer", color: "#666"
-        }}>
-          Lanjut sebagai Guest
-        </button>
+        
       </div>
     </div>
   );
