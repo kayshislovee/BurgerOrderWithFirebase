@@ -1,9 +1,9 @@
-import { useForm } from "react-hook-form";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { db, auth } from "../firebase";
+import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
 import FormDataPemesan from "./FormProfil";
+import AuthModal from "./LoginRegister";
 
 type OrderForm = {
   namaPemesan: string;
@@ -24,7 +24,6 @@ export default function FormOrder({
   const { user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [saving, setSaving] = useState(false);
-  const { register, handleSubmit, formState: { errors } } = useForm<OrderForm>();
 
   const onSubmit = async (data: OrderForm) => {
     if (!user) {
@@ -48,6 +47,23 @@ export default function FormOrder({
   };
 
   return (
-    <FormDataPemesan onSubmit={onSubmit} />
+    <div style={{ maxWidth: 480, margin: "40px auto", padding: 24, fontFamily: "sans-serif" }}>
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+      <button onClick={onKembali} style={{
+        background: "none", border: "1px solid #ccc",
+        borderRadius: 6, padding: "6px 12px", cursor: "pointer", marginBottom: 16
+      }}>
+        ← Kembali
+      </button>
+      <h2 style={{ margin: "0 0 8px" }}>Data Pemesan</h2>
+      <p style={{ fontSize: 13, color: "#666", marginBottom: 20 }}>
+        Isian burger: {layers.join(", ")}
+      </p>
+      {saving ? (
+        <p>Memproses...</p>
+      ) : (
+        <FormDataPemesan onSubmit={onSubmit} />
+      )}
+    </div>
   );
 }
