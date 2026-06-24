@@ -48,6 +48,6 @@ export default function FormOrder({
   };
 
   return (
-    <FormDataPemesan onSubmit={onSubmit} />
+    <FormDataPemesan onSubmit={onSubmit} /> //tinggal dipanggil woilah cik
   );
 }
