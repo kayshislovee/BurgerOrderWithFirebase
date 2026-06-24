@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { db, auth } from "../firebase";
-import AuthModal from "../components/LoginRegister";
 import { useAuth } from "../context/AuthContext";
-import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, getDoc, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, getDoc, doc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
+import FormOrder from "../components/FormOrder";
+import AuthModal from "../components/LoginRegister";
 
 type Ingredient = "daging" | "sayur" | "keju" | "tomat" | "saus";
 
@@ -18,14 +19,12 @@ const INGREDIENTS: { id: Ingredient; label: string; color: string }[] = [
 export default function BurgerOrder() {
   const { user } = useAuth();
   const [layers, setLayers] = useState<Ingredient[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [namaPemesan, setNamaPemesan] = useState("");
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [userData, setUserData] = useState<any>(null);
+  const [step, setStep] = useState<"pilih" | "data" | "selesai">("pilih");
 
   useEffect(() => {
     if (user) {
@@ -37,24 +36,22 @@ export default function BurgerOrder() {
     }
   }, [user]);
 
- const fetchHistory = async () => {
-  if (!user) return;
-  setLoadingHistory(true);
-  try {
-    const q = query(
-      collection(db, "orders"),
-      where("uid", "==", user.uid),
-      orderBy("createdAt", "desc")
-    );
-    const snap = await getDocs(q);
-    console.log("jumlah order:", snap.docs.length); // tambah ini
-    console.log("data:", snap.docs.map(d => d.data())); // tambah ini
-    setHistory(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-  } catch (e) {
-    console.error(e);
-  }
-  setLoadingHistory(false);
-};
+  const fetchHistory = async () => {
+    if (!user) return;
+    setLoadingHistory(true);
+    try {
+      const q = query(
+        collection(db, "orders"),
+        where("uid", "==", user.uid),
+        orderBy("createdAt", "desc")
+      );
+      const snap = await getDocs(q);
+      setHistory(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (e) {
+      console.error(e);
+    }
+    setLoadingHistory(false);
+  };
 
   const toggleSidebar = () => {
     if (!showSidebar) fetchHistory();
@@ -63,35 +60,10 @@ export default function BurgerOrder() {
 
   const addIngredient = (id: Ingredient) => {
     setLayers(prev => [id, ...prev]);
-    setSaved(false);
   };
 
   const removeIngredient = (index: number) => {
     setLayers(prev => prev.filter((_, i) => i !== index));
-    setSaved(false);
-  };
-
-  const handleOrder = async () => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-    if (!namaPemesan.trim()) return alert("Masukkan nama pemesan dulu!");
-    if (layers.length === 0) return alert("Tambahkan isian burger dulu!");
-    setSaving(true);
-    try {
-      await addDoc(collection(db, "orders"), {
-        uid: user.uid,
-        email: user.email,
-        namaPemesan,
-        layers,
-        createdAt: serverTimestamp(),
-      });
-      setSaved(true);
-    } catch (e) {
-      alert("Gagal menyimpan order.");
-    }
-    setSaving(false);
   };
 
   const getColor = (id: Ingredient) =>
@@ -99,6 +71,30 @@ export default function BurgerOrder() {
 
   const getLabel = (id: Ingredient) =>
     INGREDIENTS.find(i => i.id === id)?.label ?? id;
+
+  if (step === "data") {
+    return (
+      <FormOrder
+        layers={layers}
+        onKembali={() => setStep("pilih")}
+        onSelesai={() => setStep("selesai")}
+      />
+    );
+  }
+
+  if (step === "selesai") {
+    return (
+      <div style={{ maxWidth: 480, margin: "80px auto", padding: 24, textAlign: "center", fontFamily: "sans-serif" }}>
+        <p style={{ fontSize: 48 }}>🍔</p>
+        <h2>Order Berhasil!</h2>
+        <p style={{ color: "#666" }}>Pesanan kamu sedang diproses.</p>
+        <button onClick={() => { setStep("pilih"); setLayers([]); }}
+          style={{ padding: "10px 24px", background: "#e25822", color: "white", border: "none", borderRadius: 8, cursor: "pointer" }}>
+          Order Lagi
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: 480, margin: "40px auto", padding: 24, fontFamily: "sans-serif" }}>
@@ -231,27 +227,17 @@ export default function BurgerOrder() {
         ))}
       </div>
 
-      {/* Input nama */}
-      <input value={namaPemesan} onChange={e => setNamaPemesan(e.target.value)}
-        placeholder="Nama pemesan"
-        style={{ width: "100%", padding: 8, marginBottom: 16, borderRadius: 6, border: "1px solid #ccc", boxSizing: "border-box" }}
-      />
-
-      {/* Tombol order */}
-      <button onClick={handleOrder} disabled={saving || saved}
-        style={{
-          width: "100%", padding: 12, background: saved ? "#4caf50" : "#e25822",
-          color: "white", border: "none", borderRadius: 8,
-          fontSize: 15, cursor: saving || saved ? "default" : "pointer"
-        }}>
-        {saving ? "Menyimpan..." : saved ? "Order Tersimpan!" : "Pesan Sekarang"}
+      {/* Tombol lanjut */}
+      <button onClick={() => {
+        if (layers.length === 0) return alert("Tambahkan isian burger dulu!");
+        setStep("data");
+      }} style={{
+        width: "100%", padding: 12, background: "#e25822",
+        color: "white", border: "none", borderRadius: 8,
+        fontSize: 15, cursor: "pointer"
+      }}>
+        Lanjut →
       </button>
-
-      {saved && (
-        <p style={{ textAlign: "center", marginTop: 12, fontSize: 13, color: "#4caf50" }}>
-          Order berhasil disimpan!
-        </p>
-      )}
     </div>
   );
 }
