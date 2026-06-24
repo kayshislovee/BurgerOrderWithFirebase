@@ -6,6 +6,7 @@ import { signOut } from "firebase/auth";
 import FormOrder from "../components/FormOrder";
 import AuthModal from "../components/LoginRegister";
 
+
 type Ingredient = "daging" | "sayur" | "keju" | "tomat" | "saus";
 
 const INGREDIENTS: { id: Ingredient; label: string; color: string }[] = [
@@ -25,6 +26,7 @@ export default function BurgerOrder() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [userData, setUserData] = useState<any>(null);
   const [step, setStep] = useState<"pilih" | "data" | "selesai">("pilih");
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -137,19 +139,36 @@ export default function BurgerOrder() {
                   {!loadingHistory && history.length === 0 && (
                     <p style={{ fontSize: 13, color: "#999" }}>Belum ada order.</p>
                   )}
-                  {history.map((order, i) => (
-                    <div key={order.id} style={{
-                      background: "#f9f9f9", borderRadius: 8,
-                      padding: 12, marginBottom: 8, fontSize: 13
-                    }}>
-                      <p style={{ margin: "0 0 4px", fontWeight: 600 }}>Order #{i + 1}</p>
-                      <p style={{ margin: "0 0 4px", color: "#555" }}>Nama: {order.namaPemesan}</p>
-                      <p style={{ margin: 0, color: "#555" }}>Isian: {order.layers?.join(", ")}</p>
-                      <p style={{ margin: "4px 0 0", fontSize: 11, color: "#aaa" }}>
-                        {order.createdAt?.toDate().toLocaleString("id-ID")}
-                      </p>
-                    </div>
-                  ))}
+                 {history.map((order, i) => (
+  <div key={order.id} style={{
+    background: "#f9f9f9", borderRadius: 8,
+    padding: 12, marginBottom: 8, fontSize: 13
+  }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <p style={{ margin: 0, fontWeight: 600 }}>Order #{i + 1}</p>
+      <button onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
+        style={{ background: "none", border: "none", cursor: "pointer", color: "#e25822", fontSize: 12 }}>
+        {expandedOrder === order.id ? "Tutup ▲" : "Selengkapnya ▼"}
+      </button>
+    </div>
+
+    <p style={{ margin: "4px 0 0", color: "#555" }}>Isian: {order.layers?.join(", ")}</p>
+    <p style={{ margin: "4px 0 0", fontSize: 11, color: "#aaa" }}>
+      {order.createdAt?.toDate().toLocaleString("id-ID")}
+    </p>
+
+    {/* Detail lengkap — muncul kalau diklik */}
+    {expandedOrder === order.id && (
+      <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #eee", display: "flex", flexDirection: "column", gap: 4 }}>
+        <p style={{ margin: 0, color: "#555" }}>👤 Nama: {order.namaPemesan}</p>
+        <p style={{ margin: 0, color: "#555" }}>📞 No. HP: {order.noHp}</p>
+        <p style={{ margin: 0, color: "#555" }}>📍 Alamat: {order.alamat}</p>
+        <p style={{ margin: 0, color: "#555" }}>🏙️ Kota: {order.kota}</p>
+        <p style={{ margin: 0, color: "#555" }}>📧 Email: {order.email}</p>
+      </div>
+    )}
+  </div>
+))}
                 </div>
 
                 <button onClick={() => { signOut(auth); setShowSidebar(false); }}
