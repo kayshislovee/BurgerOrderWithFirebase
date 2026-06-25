@@ -5,16 +5,24 @@ import { collection, query, where, getDocs, orderBy, getDoc, doc } from "firebas
 import { signOut } from "firebase/auth";
 import FormOrder from "../components/FormOrder";
 import AuthModal from "../components/LoginRegister";
-
+import bunTop from "../assets/buntop.png";
+import bunBottom from "../assets/bunbot.png";
+import patty from "../assets/patty.png";
+import lettuce from "../assets/lettuce.png";
+import cheese from "../assets/cheese.png";
+import tomato from "../assets/tomato.png";
+import sauce from "../assets/sauce.png";
+import { onAuthStateChanged } from "firebase/auth";
+import { Menu, X, LogOut, ShoppingBag, MapPin, Phone, Mail, ChevronDown, ChevronUp, User } from "lucide-react";
 
 type Ingredient = "daging" | "sayur" | "keju" | "tomat" | "saus";
 
-const INGREDIENTS: { id: Ingredient; label: string; color: string }[] = [
-  { id: "daging", label: "Daging", color: "brown" },
-  { id: "sayur", label: "Sayur", color: "green" },
-  { id: "keju", label: "Keju", color: "gold" },
-  { id: "tomat", label: "Tomat", color: "red" },
-  { id: "saus", label: "Saus", color: "maroon" },
+const INGREDIENTS: { id: Ingredient; label: string; color: string; image: string; emoji: string }[] = [
+  { id: "daging", label: "Daging", color: "#8B4513", image: patty, emoji: "" },
+  { id: "sayur", label: "Sayur", color: "#16A34A", image: lettuce, emoji: "" },
+  { id: "keju", label: "Keju", color: "#F59E0B", image: cheese, emoji: "" },
+  { id: "tomat", label: "Tomat", color: "#DC2626", image: tomato, emoji: "" },
+  { id: "saus", label: "Saus", color: "#BE123C", image: sauce, emoji: "" },
 ];
 
 export default function BurgerOrder() {
@@ -28,15 +36,29 @@ export default function BurgerOrder() {
   const [step, setStep] = useState<"pilih" | "data" | "selesai">("pilih");
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      getDoc(doc(db, "users", user.uid)).then(snap => {
-        if (snap.exists()) setUserData(snap.data());
-      });
+ useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    console.log("auth state changed:", currentUser?.email); // tambah ini
+    if (currentUser) {
+      const snap = await getDoc(doc(db, "users", currentUser.uid));
+      console.log("snap exists:", snap.exists(), snap.data()); // tambah ini
+      if (snap.exists()) setUserData(snap.data());
     } else {
       setUserData(null);
     }
-  }, [user]);
+  });
+  return unsubscribe;
+}, []);
+
+{showAuthModal && (
+  <AuthModal onClose={() => {
+    setShowAuthModal(false);
+    setTimeout(() => setShowSidebar(true), 150); // buka sidebar lagi setelah login
+  }} />
+)}
+
+
+
 
   const fetchHistory = async () => {
     if (!user) return;
@@ -60,19 +82,9 @@ export default function BurgerOrder() {
     setShowSidebar(prev => !prev);
   };
 
-  const addIngredient = (id: Ingredient) => {
-    setLayers(prev => [id, ...prev]);
-  };
-
-  const removeIngredient = (index: number) => {
-    setLayers(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const getColor = (id: Ingredient) =>
-    INGREDIENTS.find(i => i.id === id)?.color ?? "#ccc";
-
-  const getLabel = (id: Ingredient) =>
-    INGREDIENTS.find(i => i.id === id)?.label ?? id;
+  const addIngredient = (id: Ingredient) => setLayers(prev => [id, ...prev]);
+  const removeIngredient = (index: number) => setLayers(prev => prev.filter((_, i) => i !== index));
+console.log("render - user:", user, "userData:", userData); // taruh di sini
 
   if (step === "data") {
     return (
@@ -86,177 +98,210 @@ export default function BurgerOrder() {
 
   if (step === "selesai") {
     return (
-      <div style={{ maxWidth: 480, margin: "80px auto", padding: 24, textAlign: "center", fontFamily: "sans-serif" }}>
-        <p style={{ fontSize: 48 }}>🍔</p>
-        <h2>Order Berhasil!</h2>
-        <p style={{ color: "#666" }}>Pesanan kamu sedang diproses.</p>
-        <button onClick={() => { setStep("pilih"); setLayers([]); }}
-          style={{ padding: "10px 24px", background: "#e25822", color: "white", border: "none", borderRadius: 8, cursor: "pointer" }}>
-          Order Lagi
-        </button>
+      <div className="min-h-screen bg-amber-50 flex items-center justify-center">
+        <div className="text-center px-6">
+          <p className="text-7xl mb-4">🍔</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Order Berhasil!</h2>
+          <p className="text-gray-500 mb-6">Pesanan kamu sedang kami siapkan dengan penuh cinta.</p>
+          <button
+            onClick={() => { setStep("pilih"); setLayers([]); }}
+            className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-8 py-3 rounded-full transition-colors"
+          >
+            Order Lagi
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: 480, margin: "40px auto", padding: 24, fontFamily: "sans-serif" }}>
+    <div className="min-h-screen bg-amber-50">
 
       {/* Tombol sidebar */}
-      <button onClick={toggleSidebar} style={{
-        position: "fixed", top: 16, left: 16,
-        background: "#e25822", color: "white", border: "none",
-        borderRadius: 8, padding: "8px 16px", cursor: "pointer", zIndex: 100
-      }}>
-        {user ? "☰ Akun" : "☰ Menu"}
-      </button>
+      <button onClick={toggleSidebar} className="fixed top-4 left-4 z-50 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-md transition-colors flex items-center gap-2">
+  <Menu size={16} />
+  {user ? `${userData?.name?.split(" ")[0] ?? "Akun"}` : "Masuk"}
+</button>
 
-      {/* Sidebar */}
+      {/* Sidebar overlay */}
       {showSidebar && (
-        <div onClick={toggleSidebar} style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 200
-        }}>
-          <div onClick={e => e.stopPropagation()} style={{
-            position: "absolute", left: 0, top: 0, bottom: 0,
-            width: 300, background: "white", padding: 24,
-            display: "flex", flexDirection: "column", gap: 16,
-            overflowY: "auto"
-          }}>
-            <button onClick={toggleSidebar} style={{
-              alignSelf: "flex-end", background: "none", border: "none",
-              fontSize: 20, cursor: "pointer"
-            }}>✕</button>
+        <div onClick={toggleSidebar} className="fixed inset-0 bg-black/40 z-40">
+          <div
+            onClick={e => e.stopPropagation()}
+            className="absolute left-0 top-0 bottom-0 w-80 bg-white shadow-2xl flex flex-col overflow-y-auto"
+          >
+            {/* Header sidebar */}
+            <div className="bg-orange-500 px-6 py-5 flex items-center justify-between">
+              <h2 className="text-white font-bold text-lg">
+                {user ? "Akun Saya" : "Menu"}
+              </h2>
+             <button onClick={toggleSidebar} className="text-white text-xl hover:opacity-70">
+  <X size={20} />
+</button>
+            </div>
 
-            {user ? (
-              <>
-                <div style={{ background: "#fdf6ec", borderRadius: 8, padding: 16 }}>
-                  <p style={{ margin: 0, fontWeight: 700, fontSize: 15 }}>👤 {userData?.name ?? "Pengguna"}</p>
-                  <p style={{ margin: "4px 0 0", fontSize: 13, color: "#666" }}>{user.email}</p>
-                </div>
+            <div className="flex flex-col gap-4 p-5 flex-1">
+              {user ? (
+                <>
+                  {/* Profil */}
+                  <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-orange-200 flex items-center justify-center text-orange-700 font-bold text-lg">
+                        {(userData?.name ?? user.email)?.[0]?.toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-800 text-sm">{userData?.name ?? "Pengguna"}</p>
+                        <p className="text-gray-400 text-xs">{user.email}</p>
+                      </div>
+                    </div>
+                  </div>
 
-                <div>
-                  <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>🧾 Riwayat Order</h3>
-                  {loadingHistory && <p style={{ fontSize: 13, color: "#999" }}>Memuat...</p>}
-                  {!loadingHistory && history.length === 0 && (
-                    <p style={{ fontSize: 13, color: "#999" }}>Belum ada order.</p>
-                  )}
-                 {history.map((order, i) => (
-  <div key={order.id} style={{
-    background: "#f9f9f9", borderRadius: 8,
-    padding: 12, marginBottom: 8, fontSize: 13
-  }}>
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <p style={{ margin: 0, fontWeight: 600 }}>Order #{i + 1}</p>
-      <button onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
-        style={{ background: "none", border: "none", cursor: "pointer", color: "#e25822", fontSize: 12 }}>
-        {expandedOrder === order.id ? "Tutup ▲" : "Selengkapnya ▼"}
-      </button>
+                  {/* Riwayat */}
+                  <div>
+                   <div className="flex items-center gap-2">
+  <ShoppingBag size={15} className="text-gray-500" />
+  <h3 className="font-semibold text-gray-700 text-sm">Riwayat Order</h3>
+</div>
+                    {loadingHistory && <p className="text-gray-400 text-sm">Memuat...</p>}
+                    {!loadingHistory && history.length === 0 && (
+                      <p className="text-gray-400 text-sm">Belum ada order.</p>
+                    )}
+                    {history.map((order, i) => (
+                      <div key={order.id} className="bg-gray-50 rounded-xl p-3 mb-2 border border-gray-100">
+                        <div className="flex justify-between items-center">
+                          <p className="font-semibold text-gray-700 text-sm">Order #{i + 1}</p>
+                          <button onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
+  className="text-orange-500 text-xs hover:underline flex items-center gap-1">
+  {expandedOrder === order.id
+    ? <><ChevronUp size={12} /> Tutup</>
+    : <><ChevronDown size={12} /> Detail</>}
+</button>
+                        </div>
+                        <p className="text-gray-500 text-xs mt-1">🍔 {order.layers?.join(", ")}</p>
+                        <p className="text-gray-300 text-xs mt-1">
+                          {order.createdAt?.toDate().toLocaleString("id-ID")}
+                        </p>
+                        {expandedOrder === order.id && (
+  <div className="mt-3 pt-3 border-t border-gray-200 flex flex-col gap-2">
+    <div className="flex items-center gap-2 text-gray-600 text-xs">
+      <User size={12} /> <span>{order.namaPemesan}</span>
     </div>
-
-    <p style={{ margin: "4px 0 0", color: "#555" }}>Isian: {order.layers?.join(", ")}</p>
-    <p style={{ margin: "4px 0 0", fontSize: 11, color: "#aaa" }}>
-      {order.createdAt?.toDate().toLocaleString("id-ID")}
-    </p>
-
-    {/* Detail lengkap — muncul kalau diklik */}
-    {expandedOrder === order.id && (
-      <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #eee", display: "flex", flexDirection: "column", gap: 4 }}>
-        <p style={{ margin: 0, color: "#555" }}>👤 Nama: {order.namaPemesan}</p>
-        <p style={{ margin: 0, color: "#555" }}>📞 No. HP: {order.noHp}</p>
-        <p style={{ margin: 0, color: "#555" }}>📍 Alamat: {order.alamat}</p>
-        <p style={{ margin: 0, color: "#555" }}>🏙️ Kota: {order.kota}</p>
-        <p style={{ margin: 0, color: "#555" }}>📧 Email: {order.email}</p>
-      </div>
-    )}
+    <div className="flex items-center gap-2 text-gray-600 text-xs">
+      <Phone size={12} /> <span>{order.noHp}</span>
+    </div>
+    <div className="flex items-center gap-2 text-gray-600 text-xs">
+      <MapPin size={12} /> <span>{order.alamat}, {order.kota}</span>
+    </div>
+    <div className="flex items-center gap-2 text-gray-600 text-xs">
+      <Mail size={12} /> <span>{order.email}</span>
+    </div>
   </div>
-))}
-                </div>
+)}
+                      </div>
+                    ))}
+                  </div>
 
-                <button onClick={() => { signOut(auth); setShowSidebar(false); }}
-                  style={{
-                    marginTop: "auto", padding: 10, background: "#e25822",
-                    color: "white", border: "none", borderRadius: 8, cursor: "pointer"
-                  }}>
-                  Keluar
-                </button>
-              </>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
-                <p style={{ margin: 0, fontSize: 14, color: "#555" }}>
-                  Login untuk melihat riwayat order kamu.
-                </p>
-                <button onClick={() => { setShowSidebar(false); setShowAuthModal(true); }}
-                  style={{
-                    padding: 10, background: "#e25822", color: "white",
-                    border: "none", borderRadius: 8, cursor: "pointer"
-                  }}>
-                  Masuk / Daftar
-                </button>
-              </div>
-            )}
+                  {/* Logout */}
+                  <button onClick={() => { signOut(auth); setShowSidebar(false); }}
+  className="mt-auto w-full py-3 border border-orange-300 text-orange-500 hover:bg-orange-50 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+  <LogOut size={15} />
+  Keluar
+</button>
+                </>
+              ) : (
+                <div className="flex flex-col gap-3 mt-4">
+                  <p className="text-gray-500 text-sm">Masuk untuk melihat riwayat ordermu.</p>
+                  <button
+                    onClick={() => { setShowSidebar(false); setTimeout(() => setShowAuthModal(true), 100); }}
+                    className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-semibold transition-colors"
+                  >
+                    Masuk / Daftar
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+     {showAuthModal && (
+  <AuthModal onClose={() => {
+    setShowAuthModal(false);
+    setShowSidebar(false);
+  }} />
+)}
+      {/* Konten utama */}
+      <div className="max-w-md mx-auto px-5 pt-20 pb-10">
 
-      <h2 style={{ margin: "0 0 24px" }}>Buat Burger Kamu</h2>
-
-      {/* Visual Burger */}
-      <div style={{ background: "#fdf6ec", borderRadius: 12, padding: 24, marginBottom: 24, minHeight: 200, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-        <div style={{ width: 200, height: 40, background: "#D2691E", borderRadius: "50% 50% 10% 10%", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 13, fontWeight: 500 }}>
-          Roti Atas
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">Burger Builder</h1>
+          <p className="text-gray-400 text-sm mt-1">Rakit burgermu sendiri, sesukamu</p>
         </div>
 
-        {layers.length === 0 && (
-          <p style={{ color: "#aaa", fontSize: 13, padding: "16px 0" }}>Belum ada isian</p>
+        {/* Visual burger */}
+        <div className="bg-white rounded-3xl shadow-sm border border-amber-100 p-6 mb-6 flex flex-col items-center gap-2 min-h-64">
+          <img src={bunTop} alt="Roti atas" className="w-48 drop-shadow-md" />
+
+          {layers.length === 0 && (
+            <p className="text-gray-300 text-sm py-4">Tambahkan isian di bawah</p>
+          )}
+
+          <div className="flex flex-col items-center gap-2 w-48">
+            {layers.map((layer, i) => {
+              const ingredient = INGREDIENTS.find(item => item.id === layer);
+              return (
+                <button
+                  key={i}
+                  onClick={() => removeIngredient(i)}
+                  title="Klik untuk hapus"
+                  className="w-full p-0 bg-transparent border-none cursor-pointer hover:opacity-70 transition-opacity"
+                >
+                  <img src={ingredient?.image} alt={ingredient?.label} className="w-full rounded-xl shadow-sm" />
+                </button>
+              );
+            })}
+          </div>
+
+          <img src={bunBottom} alt="Roti bawah" className="w-48 drop-shadow-md" />
+        </div>
+
+        {/* Info layer */}
+        {layers.length > 0 && (
+          <p className="text-center text-xs text-gray-400 -mt-3 mb-4">
+            {layers.length} isian • klik gambar untuk hapus
+          </p>
         )}
 
-        {layers.map((layer, i) => (
-          <div key={i} onClick={() => removeIngredient(i)}
-            title="Klik untuk hapus"
-            style={{
-              width: 180, height: 28, background: getColor(layer),
-              borderRadius: 6, display: "flex", alignItems: "center",
-              justifyContent: "center", color: "white", fontSize: 12,
-              cursor: "pointer", userSelect: "none"
-            }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = "0.7")}
-            onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
-          >
-            {getLabel(layer)} ✕
+        {/* Tombol isian */}
+        <div className="bg-white rounded-2xl border border-amber-100 p-4 mb-5">
+          <p className="text-xs text-gray-400 font-medium mb-3 uppercase tracking-wide">Pilih Isian</p>
+          <div className="flex flex-wrap gap-2">
+            {INGREDIENTS.map(ing => (
+              <button
+                key={ing.id}
+                onClick={() => addIngredient(ing.id)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-medium hover:opacity-90 active:scale-95 transition-all shadow-sm"
+                style={{ backgroundColor: ing.color }}
+              >
+                <span>{ing.emoji}</span>
+                <span>{ing.label}</span>
+              </button>
+            ))}
           </div>
-        ))}
-
-        <div style={{ width: 200, height: 32, background: "#D2691E", borderRadius: "10% 10% 50% 50%", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 13, fontWeight: 500 }}>
-          Roti Bawah
         </div>
-      </div>
 
-      {/* Tombol isian */}
-      <p style={{ fontSize: 13, color: "#666", marginBottom: 10 }}>Tambah isian (klik layer di burger untuk hapus):</p>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
-        {INGREDIENTS.map(ing => (
-          <button key={ing.id} onClick={() => addIngredient(ing.id)}
-            style={{
-              padding: "8px 16px", background: ing.color, color: "white",
-              border: "none", borderRadius: 20, cursor: "pointer", fontSize: 13
-            }}>
-            + {ing.label}
-          </button>
-        ))}
+        {/* Tombol lanjut */}
+        <button
+          onClick={() => {
+            if (layers.length === 0) return alert("Tambahkan isian burger dulu!");
+            setStep("data");
+          }}
+          className="w-full py-4 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-bold text-base rounded-2xl shadow-md transition-all"
+        >
+          Lanjut ke Pemesanan →
+        </button>
       </div>
-
-      {/* Tombol lanjut */}
-      <button onClick={() => {
-        if (layers.length === 0) return alert("Tambahkan isian burger dulu!");
-        setStep("data");
-      }} style={{
-        width: "100%", padding: 12, background: "#e25822",
-        color: "white", border: "none", borderRadius: 8,
-        fontSize: 15, cursor: "pointer"
-      }}>
-        Lanjut →
-      </button>
     </div>
   );
 }

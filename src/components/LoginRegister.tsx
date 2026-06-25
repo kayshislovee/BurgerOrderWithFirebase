@@ -20,6 +20,7 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [firebaseError, setFirebaseError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -27,10 +28,12 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("form submitted", form);
     setFirebaseError("");
 
     const schema = mode === "login" ? loginSchema : registerSchema;
     const result = schema.safeParse(form);
+    console.log("validasi result:", result);
 
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
@@ -43,9 +46,10 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
 
     setErrors({});
     try {
+      console.log("mencoba login...");
       if (mode === "login") {
         await signInWithEmailAndPassword(auth, form.email, form.password);
-        alert("Berhasil login!");
+        alert("Login berhasil!");
       } else {
         const { user } = await createUserWithEmailAndPassword(auth, form.email, form.password);
         await setDoc(doc(db, "users", user.uid), {
@@ -55,8 +59,11 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
           createdAt: serverTimestamp(),
         });
       }
+      console.log("login berhasil");
+      
       onClose(); // tutup modal setelah berhasil
-    } catch {
+    } catch (err) {
+      console.log("error:", err);
       setFirebaseError(mode === "login" ? "Email atau password salah." : "Email sudah digunakan.");
     }
   };
