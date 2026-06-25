@@ -3,6 +3,8 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "fire
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { z } from "zod";
+import { useNavigate } from "react-router-dom";
+
 
 const loginSchema = z.object({
   email: z.string().email("Format email tidak valid"),
@@ -20,7 +22,8 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [firebaseError, setFirebaseError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const navigate = useNavigate();
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -45,27 +48,22 @@ export default function AuthModal({ onClose }: { onClose: () => void }) {
     }
 
     setErrors({});
-    try {
-      console.log("mencoba login...");
-      if (mode === "login") {
-        await signInWithEmailAndPassword(auth, form.email, form.password);
-        alert("Login berhasil!");
-      } else {
-        const { user } = await createUserWithEmailAndPassword(auth, form.email, form.password);
-        await setDoc(doc(db, "users", user.uid), {
-          uid: user.uid,
-          name: form.name,
-          email: form.email,
-          createdAt: serverTimestamp(),
-        });
-      }
-      console.log("login berhasil");
-      
-      onClose(); // tutup modal setelah berhasil
-    } catch (err) {
-      console.log("error:", err);
-      setFirebaseError(mode === "login" ? "Email atau password salah." : "Email sudah digunakan.");
-    }
+  try {
+  if (mode === "login") {
+    await signInWithEmailAndPassword(auth, form.email, form.password);
+  } else {
+    const { user } = await createUserWithEmailAndPassword(auth, form.email, form.password);
+    await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid,
+      name: form.name,
+      email: form.email,
+      createdAt: serverTimestamp(),
+    });
+  }
+  navigate(-1); // kembali ke halaman sebelumnya
+} catch (err) {
+  setFirebaseError(mode === "login" ? "Email atau password salah." : "Email sudah digunakan.");
+}
   };
 
   return (

@@ -1,27 +1,54 @@
 ﻿import { useEffect, useState } from 'react';
 import {  Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { LogIn, Menu, X, ArrowRight, Hamburger } from 'lucide-react';
+import { LogIn, LogOut, Menu, X, ArrowRight, Hamburger, ChevronDown } from 'lucide-react';
 import burger1 from './assets/burger1.png';
 import burger2 from './assets/burger2.png';
 import aldis from './assets/aldis.jpg';
 import Login from './components/LoginRegister';
 import PesanBurger from './pages/pesanburger';
+import { useAuth } from './context/AuthContext';
+import { db } from './firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
+import { auth } from './firebase';
+
 
 // 1. Komponen Utama Landing Page (Dipisah agar Routing rapi)
 function HomePage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const burgerImages = [ burger1,aldis, burger2];
+  const burgerImages = [aldis, burger1, burger2];
   const [currentBurgerIndex, setCurrentBurgerIndex] = useState(0);
-  
-  // Hook untuk navigasi via tombol/fungsi programmatic
-  const navigate = useNavigate();
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentBurgerIndex((prevIndex) => (prevIndex + 1) % burgerImages.length);
     }, 4000);
+
     return () => clearInterval(interval);
   }, [burgerImages.length]);
+
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [userProfile, setUserProfile] = useState<{ name: string; avatar: string }>({ name: "", avatar: "" });
+  const isLoggedIn = !!user;
+  
+
+  useEffect(() => {
+  if (user) {
+    getDoc(doc(db, "users", user.uid)).then(snap => {
+      if (snap.exists()) {
+        const data = snap.data();
+        setUserProfile({
+          name: data.name ?? data.nama ?? user.email ?? "",
+          avatar: data.avatar ?? ""
+        });
+      }
+    });
+  } else {
+    setUserProfile({ name: "", avatar: "" });
+  }
+}, [user]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans antialiased">
@@ -42,16 +69,49 @@ function HomePage() {
             </div>
 
             {/* Tombol Aksi Kanan Atas */}
-            <div className="hidden md:flex items-center gap-4">
-              {/* MENGGUNAKAN <Link> UNTUK NAVIGASI HALAMAN */}
-              <Link
-                to="/login"
-                className="bg-orange-600 hover:bg-orange-700 text-white font-medium text-sm px-5 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-orange-600/20"
-              >
-                <LogIn className="w-4 h-4" />
-                Login
-              </Link>
-            </div>
+           {/* Tombol Aksi Kanan Atas */}
+<div className="hidden md:flex items-center gap-4">
+  {isLoggedIn ? (
+  <div className="relative">
+    <button
+      onClick={() => setShowDropdown(prev => !prev)}
+      className="flex items-center gap-3 bg-slate-100 hover:bg-slate-200/80 px-4 py-2 rounded-xl border border-slate-200/60 transition group"
+    >
+      <div className="w-8 h-8 rounded-full bg-orange-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+        {userProfile.name.charAt(0).toUpperCase()}
+      </div>
+      <div className="flex flex-col text-left">
+        <span className="text-xs text-slate-400 font-medium leading-none">Selamat datang,</span>
+        <span className="text-sm font-semibold text-slate-800 group-hover:text-slate-900 transition mt-0.5">
+          {userProfile.name}
+        </span>
+      </div>
+      <ChevronDown className="w-4 h-4 text-slate-400" />
+    </button>
+
+    {/* Dropdown */}
+    {showDropdown && (
+      <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden z-50">
+        <button
+          onClick={() => { signOut(auth); setShowDropdown(false); }}
+          className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition"
+        >
+          <LogOut className="w-4 h-4" />
+          Keluar
+        </button>
+      </div>
+    )}
+  </div>
+) : (
+  <Link
+    to="/login"
+    className="bg-orange-600 hover:bg-orange-700 text-white font-medium text-sm px-5 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-orange-600/20"
+  >
+    <LogIn className="w-4 h-4" />
+    Login
+  </Link>
+)}
+</div>
 
             {/* Mobile Menu Button */}
             <div className="md:hidden flex items-center">
