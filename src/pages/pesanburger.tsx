@@ -14,7 +14,10 @@ import cheese from "../assets/cheese.png";
 import tomato from "../assets/tomato.png";
 import sauce from "../assets/sauce.png";
 import { onAuthStateChanged } from "firebase/auth";
-import { Menu, X, LogOut, ShoppingBag, MapPin, Phone, Mail, ChevronDown, ChevronUp, User, Home, Hamburger, ArrowRight } from "lucide-react";
+import { Menu, X, LogOut, ShoppingBag, MapPin, Phone, Mail, ChevronDown, ChevronUp, User, Home, Hamburger,UtensilsCrossed, ArrowRight } from "lucide-react";
+import addSound from "../assets/pop.mp3"; 
+import removeSound from "../assets/whop.mp3";
+
 
 // di dalam komponen:
 type Ingredient = "daging" | "sayur" | "keju" | "tomat" | "saus";
@@ -38,8 +41,10 @@ export default function BurgerOrder() {
   const [userData, setUserData] = useState<any>(null);
   const [step, setStep] = useState<"pilih" | "data" | "selesai">("pilih");
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const playAddSound = () => new Audio(addSound).play();
+  const playRemoveSound = () => new Audio(removeSound).play();
 
- useEffect(() => {
+  useEffect(() => {
   const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
     console.log("auth state changed:", currentUser?.email); // tambah ini
     if (currentUser) {
@@ -85,9 +90,15 @@ export default function BurgerOrder() {
     setShowSidebar(prev => !prev);
   };
 
-  const addIngredient = (id: Ingredient) => setLayers(prev => [id, ...prev]);
-  const removeIngredient = (index: number) => setLayers(prev => prev.filter((_, i) => i !== index));
-console.log("render - user:", user, "userData:", userData); // taruh di sini
+ const addIngredient = (id: Ingredient) => {
+  playAddSound();
+  setLayers(prev => [id, ...prev]);
+};
+
+const removeIngredient = (index: number) => {
+  playRemoveSound();
+  setLayers(prev => prev.filter((_, i) => i !== index));
+};
 
   if (step === "data") {
     return (
@@ -168,12 +179,15 @@ if (step === "selesai") {
       )}
 
     {/* Sidebar overlay */}
-    {showSidebar && (
-      <div onClick={toggleSidebar} className="fixed inset-0 bg-black/40 z-40">
-        <div
-          onClick={e => e.stopPropagation()}
-          className="absolute left-0 top-0 bottom-0 w-80 bg-white shadow-2xl flex flex-col overflow-y-auto"
-        >
+    
+      <div
+  onClick={toggleSidebar}
+  className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${showSidebar ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+>
+  <div
+    onClick={e => e.stopPropagation()}
+    className={`absolute left-0 top-0 bottom-0 w-80 bg-white shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ease-in-out ${showSidebar ? "translate-x-0" : "-translate-x-full"}`}
+  >
           {/* Header sidebar */}
           <div className="bg-orange-500 px-6 py-5 flex items-center justify-between">
             <h2 className="text-white font-bold text-lg">
@@ -224,7 +238,10 @@ if (step === "selesai") {
                 : <><ChevronDown size={12} /> Detail</>}
             </button>
           </div>
-          <p className="text-gray-500 text-xs mt-1">🍔 {order.layers?.join(", ")}</p>
+          <div className="flex items-center gap-1 text-gray-500 text-xs mt-1">
+  <UtensilsCrossed size={11} />
+  <span>{order.layers?.join(", ")}</span>
+</div>
           <p className="text-gray-300 text-xs mt-1">
             {order.createdAt?.toDate().toLocaleString("id-ID")}
           </p>
@@ -287,7 +304,7 @@ if (step === "selesai") {
             </div>
           </div>
         </div>
-      )}
+      
 
      {showAuthModal && (
   <AuthModal onClose={() => {
