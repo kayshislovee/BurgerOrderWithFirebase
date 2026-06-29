@@ -13,6 +13,11 @@ import lettuce from "../assets/lettuce.png";
 import cheese from "../assets/cheese.png";
 import tomato from "../assets/tomato.png";
 import sauce from "../assets/sauce.png";
+import pattyIcon from "../assets/patty.svg";
+import saladIcon from "../assets/salad.svg";
+import cheeseIcon from "../assets/cheese.svg";
+import tomatoIcon from "../assets/tomato.svg";
+import sauceIcon from "../assets/sauce.svg";
 import { useRef, useCallback } from "react";
 
 import {
@@ -54,12 +59,12 @@ type Ingredient = "daging" | "sayur" | "keju" | "tomat" | "saus";
 
 
 
-const INGREDIENTS: { id: Ingredient; label: string; color: string; image: string; emoji: string }[] = [
-  { id: "daging", label: "Daging", color: "#8B4513", image: patty, emoji: "" },
-  { id: "sayur", label: "Sayur", color: "#16A34A", image: lettuce, emoji: "" },
-  { id: "keju", label: "Keju", color: "#F59E0B", image: cheese, emoji: "" },
-  { id: "tomat", label: "Tomat", color: "#DC2626", image: tomato, emoji: "" },
-  { id: "saus", label: "Saus", color: "#BE123C", image: sauce, emoji: "" },
+const INGREDIENTS: { id: Ingredient; label: string; color: string; image: string; icon: string }[] = [
+  { id: "daging", label: "Daging", color: "#8B4513", image: patty, icon: pattyIcon },
+  { id: "sayur", label: "Sayur", color: "#16A34A", image: lettuce, icon: saladIcon },
+  { id: "keju", label: "Keju", color: "#F59E0B", image: cheese, icon: cheeseIcon },
+  { id: "tomat", label: "Tomat", color: "#DC2626", image: tomato, icon: tomatoIcon },
+  { id: "saus", label: "Saus", color: "#BE123C", image: sauce, icon: sauceIcon },
 ];
 
 
@@ -456,27 +461,27 @@ const fetchHistory = async (startAfterDoc?: any) => {
         </p>
       )}
 
-        <div className="bg-white rounded-2xl border border-amber-100 p-4 mb-5">
-          <p className="text-xs text-gray-400 font-medium mb-3 uppercase tracking-wide">Pilih Isian</p>
-          <div className="flex flex-wrap gap-2">
+        <div className="bg-white rounded-2xl border border-amber-100 p-4 mb-5 -mx-15">
+  <p className="text-xs text-gray-400 font-medium mb-3 uppercase tracking-wide">Pilih Isian</p>
+  <div className="flex gap-2 justify-center flex-wrap">
             {INGREDIENTS.map(ing => (
-  <button
-    key={ing.id}
-    onClick={() => addIngredient(ing.id)}
-    className="relative flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-medium hover:opacity-90 active:scale-95 transition-all shadow-sm"
-    style={{ backgroundColor: ing.color }}
-  >
-   
-    <span>{ing.label}</span>
+              <button
+  key={ing.id}
+  onClick={() => addIngredient(ing.id)}
+  className="relative flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-medium hover:opacity-90 active:scale-95 transition-all shadow-sm"
+  style={{ backgroundColor: ing.color }}
+>
+                <img src={ing.icon} alt={ing.label} className="w-4 h-4" />
+                <span>{ing.label}</span>
 
-    {/* Badge counter */}
-    {ingredientCount[ing.id] > 0 && (
-      <span className="absolute -top-2 -right-2 bg-white text-orange-500 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm border border-orange-100">
-        {ingredientCount[ing.id]}
-      </span>
-    )}
-  </button>
-))}
+                {/* Badge counter */}
+                {typeof ingredientCount !== 'undefined' && ingredientCount[ing.id] > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-white text-orange-500 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm border border-orange-100">
+                    {ingredientCount[ing.id]}
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
         </div>
 
