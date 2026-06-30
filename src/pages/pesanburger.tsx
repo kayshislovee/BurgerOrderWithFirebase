@@ -19,6 +19,8 @@ import cheeseIcon from "../assets/cheese.svg";
 import tomatoIcon from "../assets/tomato.svg";
 import sauceIcon from "../assets/sauce.svg";
 import { useRef, useCallback } from "react";
+import { motion } from "framer-motion";
+
 
 import {
   Menu,
@@ -213,46 +215,41 @@ const fetchHistory = async (startAfterDoc?: any) => {
     return <FormOrder layers={layers} onKembali={() => setStep("pilih")} onSelesai={() => setStep("selesai")} />;
   }
 
-  if (step === "selesai") {
-    return (
-      <div className="min-h-screen bg-amber-50">
-        <div className="w-full max-w-md bg-white rounded-[2.5rem] border border-slate-100 p-8 text-center shadow-xl shadow-slate-200/60 relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-orange-500/5 rounded-full blur-2xl" />
-          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl" />
-
-          <div className="relative flex justify-center mb-6">
-            <div className="bg-orange-50 text-orange-600 p-5 rounded-3xl relative">
-              <Hamburger className="w-10 h-10" />
-            </div>
-          </div>
-
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Pesanan Berhasil Dibuat!</h2>
-          <p className="text-sm text-slate-500 font-medium mt-2 max-w-xs mx-auto leading-relaxed">
-            Koki kami sedang menyiapkan lapisan burgermu. Mohon tunggu sebentar, pesanan akan segera diantar hangat.
-          </p>
-
-          <div className="my-6 border-t border-dashed border-slate-200" />
-          <div className="bg-slate-50/80 rounded-2xl p-4 mb-8 text-left space-y-2.5 border border-slate-100">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-400 font-medium">Metode Pembayaran</span>
-              <span className="text-slate-700 font-bold">Bayar di Tempat (COD)</span>
-            </div>
-          </div>
-
-          <button
-            onClick={() => {
-              setStep("pilih");
-              setLayers([]);
-            }}
-            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-4 px-6 rounded-xl shadow-xl shadow-slate-900/10 transition transform active:scale-[0.98] duration-150 flex items-center justify-center gap-2 group"
-          >
-            Buat Racikan Baru
-            <ArrowRight className="w-4 h-4 text-orange-400 group-hover:translate-x-0.5 transition-transform" />
-          </button>
+ if (step === "selesai") {
+  return (
+    <div className="min-h-screen bg-amber-50 flex items-center justify-center px-5">
+      <motion.div
+        initial={{ opacity: 0, y: -40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="bg-white rounded-3xl shadow-lg p-8 max-w-sm w-full text-center"
+      >
+        <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+          <Hamburger className="text-orange-500" size={32} />
         </div>
-      </div>
-    );
-  }
+        <h2 className="text-xl font-bold text-gray-800 mb-2">Pesanan Berhasil Dibuat!</h2>
+        <p className="text-gray-400 text-sm mb-6">
+          Koki kami sedang menyiapkan lapisan burgermu. Mohon tunggu sebentar, pesanan akan segera diantar hangat.
+        </p>
+
+        <div className="border-t border-dashed border-gray-200 pt-4 mb-6">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-400">Metode Pembayaran</span>
+            <span className="font-semibold text-gray-800">Bayar di Tempat (COD)</span>
+          </div>
+        </div>
+
+        <button
+          onClick={() => { setStep("pilih"); setLayers([]); }}
+          className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+        >
+          Buat Racikan Baru
+          <ArrowRight size={16} />
+        </button>
+      </motion.div>
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-amber-50">

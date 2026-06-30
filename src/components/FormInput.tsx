@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import type { Path } from "react-hook-form";
+import type { Path, FieldErrors, FieldError } from "react-hook-form";
 
 type FieldConfig<T> = {
   name: Path<T>;
@@ -10,7 +10,7 @@ type FieldConfig<T> = {
   pattern?: { value: RegExp; message: string };
 };
 
-type FormInputProps<T extends Record<string, string>> = {
+type FormInputProps<T extends Record<string, any>> = {
   fields: FieldConfig<T>[];
   onSubmit: (data: T) => void;
   submitLabel?: string;
@@ -29,7 +29,7 @@ export default function FormInput<T extends Record<string, string>>({
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5 text-left" noValidate>
       {/* Optional Chaining (?.) ditambahkan sebagai pengaman ganda */}
       {fields?.map(field => {
-        const error = errors[field.name as string];
+        const error = errors[field.name as Path<T>] as FieldError | undefined;
         
         return (
           <div key={field.name as string} className="flex flex-col gap-1.5">
@@ -67,14 +67,14 @@ export default function FormInput<T extends Record<string, string>>({
       })}
 
       {/* Tombol Berwarna Hitam Tegas (Slate-900) khas Utama Website Anda */}
-      <button 
-        type="submit" 
-        disabled={loading} 
+      <button
+        type="submit"
+        disabled={loading}
         className={`w-full mt-2 font-semibold py-3.5 px-6 rounded-xl transition transform active:scale-[0.98] duration-150 flex items-center justify-center gap-2 text-white shadow-xl
           ${
-            loading 
-              ? "bg-slate-300 cursor-not-allowed shadow-none" 
-              : "bg-slate-900 hover:bg-slate-800 shadow-slate-900/10 cursor-pointer"
+            loading
+              ? "bg-orange-200 cursor-not-allowed shadow-none text-slate-700"
+              : "bg-orange-500 hover:bg-orange-600 shadow-orange-900/10 cursor-pointer"
           }
         `}
       >
