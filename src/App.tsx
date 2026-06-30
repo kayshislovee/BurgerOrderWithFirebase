@@ -11,6 +11,9 @@ import { db } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { auth } from './firebase';
+import { AnimatePresence } from "framer-motion";
+import { useLocation } from "react-router-dom";
+import PageTransition from "./components/pagetransition";
 
 
 // 1. Komponen Utama Landing Page (Dipisah agar Routing rapi)
@@ -184,13 +187,15 @@ function HomePage() {
 
 // 2. Pembungkus Navigasi Utama Aplikasi
 export default function App() {
+  const location = useLocation();
+
   return (
-    
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<Login onClose={() => window.history.back()} />} />
-        <Route path="/pesanburger" element={<PesanBurger />} />
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
+        <Route path="/login" element={<PageTransition><Login onClose={() => window.history.back()} /></PageTransition>} />
+        <Route path="/pesanburger" element={<PageTransition><PesanBurger /></PageTransition>} />
       </Routes>
-    
+    </AnimatePresence>
   );
 }
