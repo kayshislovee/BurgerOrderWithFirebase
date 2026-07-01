@@ -14,6 +14,7 @@ import { auth } from './firebase';
 import { AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import PageTransition from "./components/pagetransition";
+import Admin from "./pages/admin";
 
 
 // 1. Komponen Utama Landing Page (Dipisah agar Routing rapi)
@@ -195,6 +196,7 @@ export default function App() {
         <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
         <Route path="/login" element={<PageTransition><Login onClose={() => window.history.back()} /></PageTransition>} />
         <Route path="/pesanburger" element={<PageTransition><PesanBurger /></PageTransition>} />
+        <Route path="/admin" element={<PageTransition><Admin /></PageTransition>} />
       </Routes>
     </AnimatePresence>
   );

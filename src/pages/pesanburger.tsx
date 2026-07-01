@@ -20,6 +20,7 @@ import tomatoIcon from "../assets/tomato.svg";
 import sauceIcon from "../assets/sauce.svg";
 import { useRef, useCallback } from "react";
 import { motion } from "framer-motion";
+import OrderProgress from "../components/orderprogress";
 
 
 import {
@@ -61,12 +62,12 @@ type Ingredient = "daging" | "sayur" | "keju" | "tomat" | "saus";
 
 
 
-const INGREDIENTS: { id: Ingredient; label: string; color: string; image: string; icon: string }[] = [
-  { id: "daging", label: "Daging", color: "#8B4513", image: patty, icon: pattyIcon },
-  { id: "sayur", label: "Sayur", color: "#16A34A", image: lettuce, icon: saladIcon },
-  { id: "keju", label: "Keju", color: "#F59E0B", image: cheese, icon: cheeseIcon },
-  { id: "tomat", label: "Tomat", color: "#DC2626", image: tomato, icon: tomatoIcon },
-  { id: "saus", label: "Saus", color: "#BE123C", image: sauce, icon: sauceIcon },
+const INGREDIENTS: { id: Ingredient; label: string; color: string; image: string; icon: string; durasi: number }[] = [
+  { id: "daging", label: "Daging", color: "#8B4513", image: patty, icon: pattyIcon, durasi: 60 },  
+  { id: "sayur", label: "Sayur", color: "#16A34A", image: lettuce, icon: saladIcon, durasi: 10 },   
+  { id: "keju", label: "Keju", color: "#F59E0B", image: cheese, icon: cheeseIcon, durasi: 10 },     
+  { id: "tomat", label: "Tomat", color: "#DC2626", image: tomato, icon: tomatoIcon, durasi: 10 },   
+  { id: "saus", label: "Saus", color: "#BE123C", image: sauce, icon: sauceIcon, durasi: 10 },      
 ];
 
 
@@ -211,62 +212,61 @@ const fetchHistory = async (startAfterDoc?: any) => {
 }, {} as Record<Ingredient, number>);
 
 
-  if (step === "data") {
-    return <FormOrder layers={layers} onKembali={() => setStep("pilih")} onSelesai={() => setStep("selesai")} />;
-  }
+ const [orderId, setOrderId] = useState<string | null>(null);
 
- if (step === "selesai") {
+// ubah step selesai:
+if (step === "data") {
   return (
-    <div className="min-h-screen bg-amber-50 flex items-center justify-center px-5">
-      <motion.div
-        initial={{ opacity: 0, y: -40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className="bg-white rounded-3xl shadow-lg p-8 max-w-sm w-full text-center"
-      >
+    <FormOrder
+      layers={layers}
+      onKembali={() => setStep("pilih")}
+      onSelesai={(id) => { setOrderId(id); setStep("selesai"); }}
+    />
+  );
+}
+
+if (step === "selesai" && orderId) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="min-h-screen bg-amber-50 flex items-center justify-center px-5"
+    >
+      <div className="bg-white rounded-3xl shadow-lg p-8 max-w-sm w-full">
         <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
           <Hamburger className="text-orange-500" size={32} />
         </div>
-        <h2 className="text-xl font-bold text-gray-800 mb-2">Pesanan Berhasil Dibuat!</h2>
-        <p className="text-gray-400 text-sm mb-6">
-          Koki kami sedang menyiapkan lapisan burgermu. Mohon tunggu sebentar, pesanan akan segera diantar hangat.
-        </p>
+        <h2 className="text-xl font-bold text-gray-800 text-center mb-6">Status Pesananmu</h2>
 
-        <div className="border-t border-dashed border-gray-200 pt-4 mb-6">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Metode Pembayaran</span>
-            <span className="font-semibold text-gray-800">Bayar di Tempat (COD)</span>
-          </div>
-        </div>
-
-        <button
-          onClick={() => { setStep("pilih"); setLayers([]); }}
-          className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
-        >
-          Buat Racikan Baru
-          <ArrowRight size={16} />
-        </button>
-      </motion.div>
-    </div>
+        <OrderProgress
+          orderId={orderId}
+          onSelesai={() => { setStep("pilih"); setLayers([]); setOrderId(null); }}
+        />
+      </div>
+    </motion.div>
   );
 }
 
   return (
-    <div className="min-h-screen bg-amber-50">
-      {!showSidebar && (
-        <button
-          onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-50 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-md transition-colors flex items-center gap-2"
-        >
-          <Menu size={16} />
-          {user ? `${userData?.name?.split(" ")[0] ?? "Akun"}` : "Masuk"}
-        </button>
-      )}
+    <>
+    {/* Tombol sidebar — TARUH DI SINI */}
+    <button onClick={toggleSidebar} className="fixed top-4 left-4 z-50 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-md transition-colors flex items-center gap-2">
+      <Menu size={16} />
+      {user ? `${userData?.name?.split(" ")[0] ?? "Akun"}` : "Masuk"}
+      
+    </button>
 
+    {/* Sidebar overlay — sudah ada sebelumnya */}
+    <div
+      onClick={toggleSidebar}
+  className={`fixed inset-0 bg-black/40 z-[998] transition-opacity duration-300 ${showSidebar ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+    ></div>
+    
       <div
         onClick={toggleSidebar}
-        className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${showSidebar ? "opacity-100" : "opacity-0 pointer-events-none"}`}
-      >
+       className={`fixed inset-0 bg-black/40 z-[998] transition-opacity duration-300 ${showSidebar ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+        
         <div
           onClick={e => e.stopPropagation()}
           className={`absolute left-0 top-0 bottom-0 w-80 bg-white shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ease-in-out ${showSidebar ? "translate-x-0" : "-translate-x-full"}`}
@@ -493,7 +493,7 @@ const fetchHistory = async (startAfterDoc?: any) => {
   <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-transform group-hover:translate-x-1" />
 </button>
       </div>
-    </div>
+  </>
   );
 }
 

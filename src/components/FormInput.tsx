@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import type { Path, FieldErrors, FieldError } from "react-hook-form";
+import type { Path, FieldError } from "react-hook-form";
 
 type FieldConfig<T> = {
   name: Path<T>;

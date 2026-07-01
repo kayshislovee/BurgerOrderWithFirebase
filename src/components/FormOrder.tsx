@@ -6,6 +6,7 @@ import FormInput from "./FormInput"; // 1. IMPORT FORM INPUT LANGSUNG DI SINI
 import AuthModal from "./LoginRegister";
 import { ArrowLeft, Layers, ShoppingBag } from "lucide-react"; // Icon pendukung
 import { motion } from "framer-motion";
+import { INGREDIENTS } from "../data/ingredients";
 
 
 type OrderForm = {
@@ -22,8 +23,9 @@ export default function FormOrder({
 }: {
   layers: string[];
   onKembali: () => void;
-  onSelesai: () => void;
-}) {
+  onSelesai: (orderId: string) => void;  // ← jadi ini
+})
+{
   const { user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -41,26 +43,35 @@ export default function FormOrder({
     { name: "kota" as const, label: "Kota / Kabupaten", placeholder: "Kota tujuan pengiriman", required: "Kota wajib diisi" }
   ];
 
-  const onSubmit = async (data: OrderForm) => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-    setSaving(true);
-    try {
-      await addDoc(collection(db, "orders"), {
-        uid: user.uid,
-        email: user.email,
-        ...data,
-        layers,
-        createdAt: serverTimestamp(),
-      });
-      onSelesai();
-    } catch (e) {
-      alert("Gagal menyimpan order.");
-    }
-    setSaving(false);
-  };
+ const [orderId, setOrderId] = useState<string | null>(null);
+
+const onSubmit = async (data: OrderForm) => {
+  if (!user) {
+    setShowAuthModal(true);
+    return;
+  }
+  setSaving(true);
+  try {
+     const durasi = layers.reduce((total, layer) => {
+  const ingredient = INGREDIENTS.find(i => i.id === layer);
+  return total + (ingredient?.durasi ?? 60);
+}, 0);
+    const docRef = await addDoc(collection(db, "orders"), {
+      uid: user.uid,
+      email: user.email,
+      ...data,
+      layers,
+      status: "diproses",
+      durasi, // total durasi dalam detik
+      createdAt: serverTimestamp(),
+    });
+    setOrderId(docRef.id); // simpan id order
+    onSelesai(docRef.id);  // kirim orderId ke parent
+  } catch (e) {
+    alert("Gagal menyimpan order.");
+  }
+  setSaving(false);
+};
 
 return (
   <motion.div
